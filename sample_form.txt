@@ -1,0 +1,11 @@
+form Registration {
+    meta title = "User Registration Form";
+    section PersonalInfo {
+        field username: text required;
+        field email: email pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}";
+        field age: number min=18 max=100;
+    }
+    validate {
+        if true error "Sample validation error";
+    }
+}

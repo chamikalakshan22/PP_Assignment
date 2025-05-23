@@ -1,0 +1,21 @@
+form registration {
+    meta title = "User Registration";
+    meta description = "A form to register users";
+
+    section personal {
+        field username: text required;
+        field email: email required pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}";
+        field age: number min=18 max=100;
+    }
+
+    section preferences {
+        field newsletter: checkbox default=true;
+        field country: dropdown options=["USA", "Canada", "UK"];
+    }
+
+    validate {
+        if age < 18 {
+            error "Age must be at least 18";
+        }
+    }
+}
