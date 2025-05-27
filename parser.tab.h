@@ -46,42 +46,45 @@
      VALIDATE = 262,
      IF = 263,
      ERROR = 264,
-     TRUE = 265,
-     FALSE = 266,
-     TEXT = 267,
-     TEXTAREA = 268,
-     NUMBER = 269,
-     EMAIL = 270,
-     DATE = 271,
-     CHECKBOX = 272,
-     DROPDOWN = 273,
-     RADIO = 274,
-     PASSWORD = 275,
-     FILE_INPUT = 276,
-     REQUIRED = 277,
-     PATTERN = 278,
-     DEFAULT = 279,
-     MIN = 280,
-     MAX = 281,
-     ROWS = 282,
-     COLS = 283,
-     OPTIONS = 284,
-     LBRACE = 285,
-     RBRACE = 286,
-     LBRACKET = 287,
-     RBRACKET = 288,
-     SEMICOLON = 289,
-     COMMA = 290,
-     COLON = 291,
-     EQUALS = 292,
-     LT = 293,
-     GT = 294,
-     EQ = 295,
-     NE = 296,
-     LE = 297,
-     GE = 298,
-     IDENTIFIER = 299,
-     STRING = 300
+     TEXT = 265,
+     TEXTAREA = 266,
+     NUMBER_TYPE = 267,
+     EMAIL = 268,
+     DATE = 269,
+     CHECKBOX = 270,
+     DROPDOWN = 271,
+     RADIO = 272,
+     PASSWORD = 273,
+     FILE_FIELD = 274,
+     REQUIRED = 275,
+     PATTERN = 276,
+     DEFAULT = 277,
+     MIN = 278,
+     MAX = 279,
+     ROWS = 280,
+     COLS = 281,
+     OPTIONS = 282,
+     ACCEPT = 283,
+     LBRACE = 284,
+     RBRACE = 285,
+     LBRACKET = 286,
+     RBRACKET = 287,
+     LPAREN = 288,
+     RPAREN = 289,
+     SEMICOLON = 290,
+     COMMA = 291,
+     COLON = 292,
+     EQUALS = 293,
+     LT = 294,
+     GT = 295,
+     LE = 296,
+     GE = 297,
+     EQ = 298,
+     NE = 299,
+     IDENTIFIER = 300,
+     STRING = 301,
+     NUMBER = 302,
+     BOOLEAN = 303
    };
 #endif
 /* Tokens.  */
@@ -92,55 +95,59 @@
 #define VALIDATE 262
 #define IF 263
 #define ERROR 264
-#define TRUE 265
-#define FALSE 266
-#define TEXT 267
-#define TEXTAREA 268
-#define NUMBER 269
-#define EMAIL 270
-#define DATE 271
-#define CHECKBOX 272
-#define DROPDOWN 273
-#define RADIO 274
-#define PASSWORD 275
-#define FILE_INPUT 276
-#define REQUIRED 277
-#define PATTERN 278
-#define DEFAULT 279
-#define MIN 280
-#define MAX 281
-#define ROWS 282
-#define COLS 283
-#define OPTIONS 284
-#define LBRACE 285
-#define RBRACE 286
-#define LBRACKET 287
-#define RBRACKET 288
-#define SEMICOLON 289
-#define COMMA 290
-#define COLON 291
-#define EQUALS 292
-#define LT 293
-#define GT 294
-#define EQ 295
-#define NE 296
-#define LE 297
-#define GE 298
-#define IDENTIFIER 299
-#define STRING 300
+#define TEXT 265
+#define TEXTAREA 266
+#define NUMBER_TYPE 267
+#define EMAIL 268
+#define DATE 269
+#define CHECKBOX 270
+#define DROPDOWN 271
+#define RADIO 272
+#define PASSWORD 273
+#define FILE_FIELD 274
+#define REQUIRED 275
+#define PATTERN 276
+#define DEFAULT 277
+#define MIN 278
+#define MAX 279
+#define ROWS 280
+#define COLS 281
+#define OPTIONS 282
+#define ACCEPT 283
+#define LBRACE 284
+#define RBRACE 285
+#define LBRACKET 286
+#define RBRACKET 287
+#define LPAREN 288
+#define RPAREN 289
+#define SEMICOLON 290
+#define COMMA 291
+#define COLON 292
+#define EQUALS 293
+#define LT 294
+#define GT 295
+#define LE 296
+#define GE 297
+#define EQ 298
+#define NE 299
+#define IDENTIFIER 300
+#define STRING 301
+#define NUMBER 302
+#define BOOLEAN 303
 
 
 
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 40 "parser.y"
+#line 68 "parser.y"
 {
     char *str;
     double num;
+    int boolean;
 }
 /* Line 1529 of yacc.c.  */
-#line 144 "parser.tab.h"
+#line 151 "parser.tab.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

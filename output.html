@@ -1,0 +1,130 @@
+Parsing completed successfully.
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .section { margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        .section h2 { margin-top: 0; color: #333; }
+        .field { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, textarea, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        input[type="checkbox"], input[type="radio"] { width: auto; margin-right: 5px; }
+        .radio-group { margin-top: 5px; }
+        .radio-option { margin-bottom: 5px; }
+        .error { color: red; font-size: 0.9em; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Registration</h1>
+    <form name="Registration" id="Registration">
+        <div class="section">
+            <h2>PersonalDetails</h2>
+            <div class="field">
+                <label for="Full_Name">Full_Name:</label>
+                <input type="text" name="Full_Name" id="Full_Name">
+            </div>
+            <div class="field">
+                <label for="Email">Email:</label>
+                <input type="email" name="Email" id="Email">
+            </div>
+            <div class="field">
+                <label for="Age">Age:</label>
+                <input type="number" name="Age" id="Age">
+            </div>
+            <div class="field">
+                <label for="Phone">Phone:</label>
+                <input type="text" name="Phone" id="Phone">
+            </div>
+            <div class="field">
+                <label for="Bio">Bio:</label>
+                <textarea name="Bio" id="Bio"></textarea>
+            </div>
+        </div>
+        <div class="section">
+            <h2>Preferences</h2>
+            <div class="field">
+                <label>Gender:</label>
+                <div class="radio-group">
+                </div>
+            </div>
+            <div class="field">
+                <label>
+                    <input type="checkbox" name="Newsletter">
+                    Newsletter
+                </label>
+            </div>
+            <div class="field">
+                <label>
+                    <input type="checkbox" name="Notifications">
+                    Notifications
+                </label>
+            </div>
+            <div class="field">
+                <label for="Country">Country:</label>
+                <select name="Country" id="Country">
+                </select>
+            </div>
+        </div>
+        <div class="section">
+            <h2>Security</h2>
+            <div class="field">
+                <label for="Password">Password:</label>
+                <input type="password" name="Password" id="Password">
+            </div>
+            <div class="field">
+                <label for="Confirm_Password">Confirm_Password:</label>
+                <input type="password" name="Confirm_Password" id="Confirm_Password">
+            </div>
+            <div class="field">
+                <label for="Profile_Picture">Profile_Picture:</label>
+                <input type="file" name="Profile_Picture" id="Profile_Picture">
+            </div>
+        </div>
+        <div class="section">
+            <h2>Additional</h2>
+            <div class="field">
+                <label for="BirthDate">BirthDate:</label>
+                <input type="date" name="BirthDate" id="BirthDate">
+            </div>
+            <div class="field">
+                <label for="Website">Website:</label>
+                <input type="text" name="Website" id="Website">
+            </div>
+            <div class="field">
+                <label for="Experience">Experience:</label>
+                <input type="number" name="Experience" id="Experience">
+            </div>
+            <div class="field">
+                <label>
+                    <input type="checkbox" name="Terms">
+                    Terms
+                </label>
+            </div>
+        </div>
+        <button type="submit">Submit</button>
+    </form>
+    <script>
+        document.getElementById('Registration').addEventListener('submit', function(e) {
+            let isValid = true;
+            let errors = [];
+            let age = parseFloat(document.getElementById('age').value);
+            if (age < 18) {
+                errors.push('You must be at least 18 years old to register.');
+                isValid = false;
+            }
+            let experience = parseFloat(document.getElementById('experience').value);
+            if (experience > 40) {
+                errors.push('Experience cannot exceed 40 years.');
+                isValid = false;
+            }
+            if (!isValid) {
+                e.preventDefault();
+                alert('Validation errors:\n' + errors.join('\n'));
+            }
+        });
+    </script>
+</body>
+</html>

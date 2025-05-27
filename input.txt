@@ -1,21 +1,39 @@
-form registration {
-    meta title = "User Registration";
-    meta description = "A form to register users";
+form Registration {
 
-    section personal {
-        field username: text required;
-        field email: email required pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}";
-        field age: number min=18 max=100;
+    section PersonalDetails {
+        field Full_Name: text required;
+        field Email: email required pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$";
+        field Age: number min=18 max=99 required;
+        field Phone: text pattern="^\+?[1-9]\d{1,14}$";
+        field Bio: textarea rows=4 cols=50 default="Tell us about yourself...";
     }
 
-    section preferences {
-        field newsletter: checkbox default=true;
-        field country: dropdown options=["USA", "Canada", "UK"];
+    section Preferences {
+        field Gender: radio options=["Male", "Female", "Other", "Prefer not to say"];
+        field Newsletter: checkbox default=true;
+        field Notifications: checkbox default=false;
+        field Country: dropdown options=["USA", "Canada", "UK", "Australia", "Other"];
+    }
+
+    section Security {
+        field Password: password required min=8;
+        field Confirm_Password: password required;
+        field Profile_Picture: file accept="image/*";
+    }
+
+    section Additional {
+        field BirthDate: date;
+        field Website: text pattern="^https?://.*";
+        field Experience: number min=0 max=50 default=0;
+        field Terms: checkbox required;
     }
 
     validate {
         if age < 18 {
-            error "Age must be at least 18";
+            error "You must be at least 18 years old to register.";
+        }
+        if experience > 40 {
+            error "Experience cannot exceed 40 years.";
         }
     }
 }

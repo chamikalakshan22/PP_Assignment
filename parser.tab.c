@@ -73,42 +73,45 @@
      VALIDATE = 262,
      IF = 263,
      ERROR = 264,
-     TRUE = 265,
-     FALSE = 266,
-     TEXT = 267,
-     TEXTAREA = 268,
-     NUMBER = 269,
-     EMAIL = 270,
-     DATE = 271,
-     CHECKBOX = 272,
-     DROPDOWN = 273,
-     RADIO = 274,
-     PASSWORD = 275,
-     FILE_INPUT = 276,
-     REQUIRED = 277,
-     PATTERN = 278,
-     DEFAULT = 279,
-     MIN = 280,
-     MAX = 281,
-     ROWS = 282,
-     COLS = 283,
-     OPTIONS = 284,
-     LBRACE = 285,
-     RBRACE = 286,
-     LBRACKET = 287,
-     RBRACKET = 288,
-     SEMICOLON = 289,
-     COMMA = 290,
-     COLON = 291,
-     EQUALS = 292,
-     LT = 293,
-     GT = 294,
-     EQ = 295,
-     NE = 296,
-     LE = 297,
-     GE = 298,
-     IDENTIFIER = 299,
-     STRING = 300
+     TEXT = 265,
+     TEXTAREA = 266,
+     NUMBER_TYPE = 267,
+     EMAIL = 268,
+     DATE = 269,
+     CHECKBOX = 270,
+     DROPDOWN = 271,
+     RADIO = 272,
+     PASSWORD = 273,
+     FILE_FIELD = 274,
+     REQUIRED = 275,
+     PATTERN = 276,
+     DEFAULT = 277,
+     MIN = 278,
+     MAX = 279,
+     ROWS = 280,
+     COLS = 281,
+     OPTIONS = 282,
+     ACCEPT = 283,
+     LBRACE = 284,
+     RBRACE = 285,
+     LBRACKET = 286,
+     RBRACKET = 287,
+     LPAREN = 288,
+     RPAREN = 289,
+     SEMICOLON = 290,
+     COMMA = 291,
+     COLON = 292,
+     EQUALS = 293,
+     LT = 294,
+     GT = 295,
+     LE = 296,
+     GE = 297,
+     EQ = 298,
+     NE = 299,
+     IDENTIFIER = 300,
+     STRING = 301,
+     NUMBER = 302,
+     BOOLEAN = 303
    };
 #endif
 /* Tokens.  */
@@ -119,42 +122,45 @@
 #define VALIDATE 262
 #define IF 263
 #define ERROR 264
-#define TRUE 265
-#define FALSE 266
-#define TEXT 267
-#define TEXTAREA 268
-#define NUMBER 269
-#define EMAIL 270
-#define DATE 271
-#define CHECKBOX 272
-#define DROPDOWN 273
-#define RADIO 274
-#define PASSWORD 275
-#define FILE_INPUT 276
-#define REQUIRED 277
-#define PATTERN 278
-#define DEFAULT 279
-#define MIN 280
-#define MAX 281
-#define ROWS 282
-#define COLS 283
-#define OPTIONS 284
-#define LBRACE 285
-#define RBRACE 286
-#define LBRACKET 287
-#define RBRACKET 288
-#define SEMICOLON 289
-#define COMMA 290
-#define COLON 291
-#define EQUALS 292
-#define LT 293
-#define GT 294
-#define EQ 295
-#define NE 296
-#define LE 297
-#define GE 298
-#define IDENTIFIER 299
-#define STRING 300
+#define TEXT 265
+#define TEXTAREA 266
+#define NUMBER_TYPE 267
+#define EMAIL 268
+#define DATE 269
+#define CHECKBOX 270
+#define DROPDOWN 271
+#define RADIO 272
+#define PASSWORD 273
+#define FILE_FIELD 274
+#define REQUIRED 275
+#define PATTERN 276
+#define DEFAULT 277
+#define MIN 278
+#define MAX 279
+#define ROWS 280
+#define COLS 281
+#define OPTIONS 282
+#define ACCEPT 283
+#define LBRACE 284
+#define RBRACE 285
+#define LBRACKET 286
+#define RBRACKET 287
+#define LPAREN 288
+#define RPAREN 289
+#define SEMICOLON 290
+#define COMMA 291
+#define COLON 292
+#define EQUALS 293
+#define LT 294
+#define GT 295
+#define LE 296
+#define GE 297
+#define EQ 298
+#define NE 299
+#define IDENTIFIER 300
+#define STRING 301
+#define NUMBER 302
+#define BOOLEAN 303
 
 
 
@@ -166,38 +172,66 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Declare yylex to avoid implicit function declaration
-extern int yylex(void);
+extern int yylex();
+extern int line_num;
+void yyerror(const char *s);
 
-// Global form and field structures
+FILE *output_file;
+
+// Data structures for form representation
+typedef struct {
+    char *key;
+    char *value;
+} MetaData;
+
 typedef struct {
     char *name;
-    char *meta[50];
-    int meta_count;
-    int section_count;
-} Form;
+    char *value;
+} Attribute;
 
 typedef struct {
     char *name;
     char *type;
-    char *attributes[50];
+    Attribute attributes[20];
     int attr_count;
 } Field;
 
+typedef struct {
+    char *name;
+    Field fields[50];
+    int field_count;
+} Section;
+
+typedef struct {
+    char *field_name;
+    char *operator;
+    double value;
+    char *error_msg;
+} ValidationRule;
+
+typedef struct {
+    char *name;
+    MetaData metadata[10];
+    int meta_count;
+    Section sections[20];
+    int section_count;
+    ValidationRule validations[10];
+    int validation_count;
+} Form;
+
 Form current_form;
+Section current_section;
 Field current_field;
+ValidationRule current_validation;
 
-void add_attribute(const char *attr) {
-    if (current_field.attr_count < 50) {
-        current_field.attributes[current_field.attr_count++] = strdup(attr);
-    }
-}
-
-int yyerror(const char *s) {
-    fprintf(stderr, "Error: %s\n", s);
-    return 0;
-}
-
+// Function prototypes
+void add_metadata(char *key, char *value);
+void add_section(char *name);
+void add_field(char *name, char *type);
+void add_attribute(char *name, char *value);
+void add_validation(char *field, char *op, double val, char *error);
+void generate_html();
+char* strip_quotes(char *str);
 
 
 /* Enabling traces.  */
@@ -220,13 +254,14 @@ int yyerror(const char *s) {
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 40 "parser.y"
+#line 68 "parser.y"
 {
     char *str;
     double num;
+    int boolean;
 }
 /* Line 193 of yacc.c.  */
-#line 230 "parser.tab.c"
+#line 265 "parser.tab.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -239,7 +274,7 @@ typedef union YYSTYPE
 
 
 /* Line 216 of yacc.c.  */
-#line 243 "parser.tab.c"
+#line 278 "parser.tab.c"
 
 #ifdef short
 # undef short
@@ -454,20 +489,20 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  5
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   50
+#define YYLAST   131
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  46
+#define YYNTOKENS  49
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  16
+#define YYNNTS  18
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  37
+#define YYNRULES  52
 /* YYNRULES -- Number of states.  */
-#define YYNSTATES  67
+#define YYNSTATES  131
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   300
+#define YYMAXUTOK   303
 
 #define YYTRANSLATE(YYX)						\
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -505,7 +540,7 @@ static const yytype_uint8 yytranslate[] =
       15,    16,    17,    18,    19,    20,    21,    22,    23,    24,
       25,    26,    27,    28,    29,    30,    31,    32,    33,    34,
       35,    36,    37,    38,    39,    40,    41,    42,    43,    44,
-      45
+      45,    46,    47,    48
 };
 
 #if YYDEBUG
@@ -513,35 +548,49 @@ static const yytype_uint8 yytranslate[] =
    YYRHS.  */
 static const yytype_uint8 yyprhs[] =
 {
-       0,     0,     3,     5,    13,    14,    17,    23,    24,    27,
-      33,    34,    37,    44,    46,    48,    50,    52,    54,    56,
-      58,    60,    62,    64,    65,    68,    72,    76,    78,    82,
-      86,    87,    92,    93,    96,   102,   104,   106
+       0,     0,     3,     5,    11,    14,    18,    20,    23,    24,
+      27,    33,    35,    38,    39,    46,    48,    51,    58,    64,
+      66,    68,    70,    72,    74,    76,    78,    80,    82,    84,
+      86,    89,    91,    95,    99,   103,   107,   111,   115,   119,
+     123,   129,   133,   135,   139,   144,   146,   149,   159,   169,
+     179,   189,   199
 };
 
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
 static const yytype_int8 yyrhs[] =
 {
-      47,     0,    -1,    48,    -1,     3,    44,    30,    49,    51,
-      58,    31,    -1,    -1,    49,    50,    -1,     4,    44,    37,
-      45,    34,    -1,    -1,    51,    52,    -1,     5,    44,    30,
-      53,    31,    -1,    -1,    53,    54,    -1,     6,    44,    36,
-      55,    56,    34,    -1,    12,    -1,    13,    -1,    14,    -1,
-      15,    -1,    16,    -1,    17,    -1,    18,    -1,    19,    -1,
-      20,    -1,    21,    -1,    -1,    56,    57,    -1,    23,    37,
-      45,    -1,    24,    37,    45,    -1,    22,    -1,    25,    37,
-      14,    -1,    26,    37,    14,    -1,    -1,     7,    30,    59,
-      31,    -1,    -1,    59,    60,    -1,     8,    61,     9,    45,
-      34,    -1,    10,    -1,    11,    -1,    14,    -1
+      50,     0,    -1,    51,    -1,     3,    45,    29,    52,    30,
+      -1,    53,    55,    -1,    53,    55,    64,    -1,    55,    -1,
+      55,    64,    -1,    -1,    53,    54,    -1,     4,    45,    38,
+      46,    35,    -1,    56,    -1,    55,    56,    -1,    -1,     5,
+      45,    29,    57,    58,    30,    -1,    59,    -1,    58,    59,
+      -1,     6,    45,    37,    60,    61,    35,    -1,     6,    45,
+      37,    60,    35,    -1,    10,    -1,    11,    -1,    12,    -1,
+      13,    -1,    14,    -1,    15,    -1,    16,    -1,    17,    -1,
+      18,    -1,    19,    -1,    62,    -1,    61,    62,    -1,    20,
+      -1,    21,    38,    46,    -1,    22,    38,    46,    -1,    22,
+      38,    47,    -1,    22,    38,    48,    -1,    23,    38,    47,
+      -1,    24,    38,    47,    -1,    25,    38,    47,    -1,    26,
+      38,    47,    -1,    27,    38,    31,    63,    32,    -1,    28,
+      38,    46,    -1,    46,    -1,    63,    36,    46,    -1,     7,
+      29,    65,    30,    -1,    66,    -1,    65,    66,    -1,     8,
+      45,    39,    47,    29,     9,    46,    35,    30,    -1,     8,
+      45,    40,    47,    29,     9,    46,    35,    30,    -1,     8,
+      45,    41,    47,    29,     9,    46,    35,    30,    -1,     8,
+      45,    42,    47,    29,     9,    46,    35,    30,    -1,     8,
+      45,    43,    47,    29,     9,    46,    35,    30,    -1,     8,
+      45,    44,    47,    29,     9,    46,    35,    30,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
-static const yytype_uint8 yyrline[] =
+static const yytype_uint16 yyrline[] =
 {
-       0,    61,    61,    65,    74,    76,    80,    88,    90,    94,
-      97,    99,   103,   112,   113,   114,   115,   116,   117,   118,
-     119,   120,   121,   124,   126,   130,   137,   144,   148,   154,
-     174,   176,   179,   181,   185,   189,   190,   191
+       0,    94,    94,   101,   108,   109,   110,   111,   114,   116,
+     120,   128,   129,   133,   133,   140,   141,   145,   150,   158,
+     159,   160,   161,   162,   163,   164,   165,   166,   167,   171,
+     172,   176,   179,   183,   187,   192,   195,   200,   205,   210,
+     215,   219,   226,   230,   240,   244,   245,   249,   254,   259,
+     264,   269,   274
 };
 #endif
 
@@ -551,15 +600,16 @@ static const yytype_uint8 yyrline[] =
 static const char *const yytname[] =
 {
   "$end", "error", "$undefined", "FORM", "META", "SECTION", "FIELD",
-  "VALIDATE", "IF", "ERROR", "TRUE", "FALSE", "TEXT", "TEXTAREA", "NUMBER",
-  "EMAIL", "DATE", "CHECKBOX", "DROPDOWN", "RADIO", "PASSWORD",
-  "FILE_INPUT", "REQUIRED", "PATTERN", "DEFAULT", "MIN", "MAX", "ROWS",
-  "COLS", "OPTIONS", "LBRACE", "RBRACE", "LBRACKET", "RBRACKET",
-  "SEMICOLON", "COMMA", "COLON", "EQUALS", "LT", "GT", "EQ", "NE", "LE",
-  "GE", "IDENTIFIER", "STRING", "$accept", "program", "form", "meta_list",
-  "meta_stmt", "section_list", "section_stmt", "field_list", "field_stmt",
-  "field_type", "attributes", "attribute", "validate_block",
-  "validation_rules", "validation_rule", "expression", 0
+  "VALIDATE", "IF", "ERROR", "TEXT", "TEXTAREA", "NUMBER_TYPE", "EMAIL",
+  "DATE", "CHECKBOX", "DROPDOWN", "RADIO", "PASSWORD", "FILE_FIELD",
+  "REQUIRED", "PATTERN", "DEFAULT", "MIN", "MAX", "ROWS", "COLS",
+  "OPTIONS", "ACCEPT", "LBRACE", "RBRACE", "LBRACKET", "RBRACKET",
+  "LPAREN", "RPAREN", "SEMICOLON", "COMMA", "COLON", "EQUALS", "LT", "GT",
+  "LE", "GE", "EQ", "NE", "IDENTIFIER", "STRING", "NUMBER", "BOOLEAN",
+  "$accept", "program", "form", "form_body", "meta_list", "meta_stmt",
+  "section_list", "section_stmt", "@1", "field_list", "field_stmt",
+  "field_type", "attribute_list", "attribute", "string_list",
+  "validate_block", "validation_rules", "validation_rule", 0
 };
 #endif
 
@@ -572,26 +622,30 @@ static const yytype_uint16 yytoknum[] =
      265,   266,   267,   268,   269,   270,   271,   272,   273,   274,
      275,   276,   277,   278,   279,   280,   281,   282,   283,   284,
      285,   286,   287,   288,   289,   290,   291,   292,   293,   294,
-     295,   296,   297,   298,   299,   300
+     295,   296,   297,   298,   299,   300,   301,   302,   303
 };
 # endif
 
 /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,    46,    47,    48,    49,    49,    50,    51,    51,    52,
-      53,    53,    54,    55,    55,    55,    55,    55,    55,    55,
-      55,    55,    55,    56,    56,    57,    57,    57,    57,    57,
-      58,    58,    59,    59,    60,    61,    61,    61
+       0,    49,    50,    51,    52,    52,    52,    52,    53,    53,
+      54,    55,    55,    57,    56,    58,    58,    59,    59,    60,
+      60,    60,    60,    60,    60,    60,    60,    60,    60,    61,
+      61,    62,    62,    62,    62,    62,    62,    62,    62,    62,
+      62,    62,    63,    63,    64,    65,    65,    66,    66,    66,
+      66,    66,    66
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
-       0,     2,     1,     7,     0,     2,     5,     0,     2,     5,
-       0,     2,     6,     1,     1,     1,     1,     1,     1,     1,
-       1,     1,     1,     0,     2,     3,     3,     1,     3,     3,
-       0,     4,     0,     2,     5,     1,     1,     1
+       0,     2,     1,     5,     2,     3,     1,     2,     0,     2,
+       5,     1,     2,     0,     6,     1,     2,     6,     5,     1,
+       1,     1,     1,     1,     1,     1,     1,     1,     1,     1,
+       2,     1,     3,     3,     3,     3,     3,     3,     3,     3,
+       5,     3,     1,     3,     4,     1,     2,     9,     9,     9,
+       9,     9,     9
 };
 
 /* YYDEFACT[STATE-NAME] -- Default rule to reduce with in state
@@ -599,41 +653,55 @@ static const yytype_uint8 yyr2[] =
    means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-       0,     0,     0,     2,     0,     1,     4,     7,     0,     5,
-      30,     0,     0,     0,     8,     0,     0,     0,    32,     3,
-       0,    10,     0,     6,     0,     0,    31,    33,     0,     9,
-      11,    35,    36,    37,     0,     0,     0,     0,     0,    13,
-      14,    15,    16,    17,    18,    19,    20,    21,    22,    23,
-      34,     0,    27,     0,     0,     0,     0,    12,    24,     0,
-       0,     0,     0,    25,    26,    28,    29
+       0,     0,     0,     2,     0,     1,     8,     0,     0,     0,
+       6,    11,     0,     3,     0,     9,     4,     0,    12,     7,
+      13,     0,     5,     0,     0,     0,     0,     0,    45,     0,
+       0,    15,     0,     0,    44,    46,     0,    14,    16,    10,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,    19,    20,    21,    22,    23,    24,    25,
+      26,    27,    28,     0,     0,     0,     0,     0,     0,     0,
+      31,     0,     0,     0,     0,     0,     0,     0,     0,    18,
+       0,    29,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,    17,    30,     0,     0,
+       0,     0,     0,     0,    32,    33,    34,    35,    36,    37,
+      38,    39,     0,    41,     0,     0,     0,     0,     0,     0,
+      42,     0,    47,    48,    49,    50,    51,    52,    40,     0,
+      43
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,     2,     3,     7,     9,    10,    14,    24,    30,    49,
-      51,    58,    15,    22,    27,    34
+      -1,     2,     3,     8,     9,    15,    10,    11,    24,    30,
+      31,    63,    80,    81,   121,    19,    27,    28
 };
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
-#define YYPACT_NINF -32
+#define YYPACT_NINF -28
 static const yytype_int8 yypact[] =
 {
-       6,   -31,    15,   -32,   -14,   -32,   -32,    13,   -26,   -32,
-       5,   -18,   -24,    -9,   -32,    -8,   -23,     7,   -32,   -32,
-       2,   -32,    -7,   -32,    -6,    -3,   -32,   -32,    -5,   -32,
-     -32,   -32,   -32,   -32,    29,     4,    -4,    14,     8,   -32,
-     -32,   -32,   -32,   -32,   -32,   -32,   -32,   -32,   -32,   -32,
-     -32,   -20,   -32,     9,    10,    11,    12,   -32,   -32,    -2,
-      -1,    31,    36,   -32,   -32,   -32,   -32
+      10,   -23,    53,   -28,    25,   -28,    50,    11,    27,    47,
+       9,   -28,    29,   -28,    14,   -28,     9,    32,   -28,   -28,
+     -28,    22,   -28,    54,    57,    18,    20,    -7,   -28,    21,
+      -6,   -28,    33,    -5,   -28,   -28,    30,   -28,   -28,   -28,
+      23,    24,    26,    28,    34,    35,    31,    40,    43,    45,
+      48,    49,    51,   -28,   -28,   -28,   -28,   -28,   -28,   -28,
+     -28,   -28,   -28,   -18,    67,    70,    74,    75,    76,    77,
+     -28,    52,    55,    56,    58,    59,    60,    61,    62,   -28,
+       5,   -28,    41,    42,    46,    63,    64,    65,    66,   -27,
+      44,    68,    69,    71,    72,    73,   -28,   -28,    78,    79,
+      82,    85,    86,    87,   -28,   -28,   -28,   -28,   -28,   -28,
+     -28,   -28,    80,   -28,    93,    94,    95,    97,    98,    99,
+     -28,   -21,   -28,   -28,   -28,   -28,   -28,   -28,   -28,    84,
+     -28
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -32,   -32,   -32,   -32,   -32,   -32,   -32,   -32,   -32,   -32,
-     -32,   -32,   -32,   -32,   -32,   -32
+     -28,   -28,   -28,   -28,   -28,   -28,    92,     2,   -28,   -28,
+     101,   -28,   -28,    15,   -28,    88,   -28,    81
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
@@ -643,35 +711,58 @@ static const yytype_int8 yypgoto[] =
 #define YYTABLE_NINF -1
 static const yytype_uint8 yytable[] =
 {
-      28,    25,    52,    53,    54,    55,    56,    31,    32,     1,
-      12,    33,    13,     4,    57,     5,     6,     8,    11,    16,
-      17,    18,    20,    19,    26,    29,    39,    40,    41,    42,
-      43,    44,    45,    46,    47,    48,    23,    21,    36,    35,
-      37,    38,    50,    63,    64,    65,    59,    60,    61,    62,
-      66
+      29,    26,    70,    71,    72,    73,    74,    75,    76,    77,
+      78,   128,    18,     1,     7,   129,    17,    79,    18,   105,
+     106,   107,     4,    34,    37,    70,    71,    72,    73,    74,
+      75,    76,    77,    78,    40,    41,    42,    43,    44,    45,
+      96,    53,    54,    55,    56,    57,    58,    59,    60,    61,
+      62,    14,     7,     5,     6,     7,    12,    13,    20,    21,
+      25,    23,    26,    29,    32,    33,    36,    46,    39,    64,
+      47,    48,    65,    49,    66,    50,    82,    67,    68,    83,
+      69,    51,    52,    84,    85,    86,    87,    98,    99,     0,
+      88,   108,   100,    89,    90,    97,    91,    92,    93,    94,
+      95,    16,     0,   112,    22,     0,     0,     0,    35,   101,
+     102,   103,   104,   114,   115,   109,   110,   116,   111,   113,
+     117,   118,   119,   122,   123,   124,   120,   125,   126,   127,
+     130,    38
 };
 
-static const yytype_uint8 yycheck[] =
+static const yytype_int8 yycheck[] =
 {
-       6,     8,    22,    23,    24,    25,    26,    10,    11,     3,
-       5,    14,     7,    44,    34,     0,    30,     4,    44,    37,
-      44,    30,    45,    31,    31,    31,    12,    13,    14,    15,
-      16,    17,    18,    19,    20,    21,    34,    30,     9,    44,
-      36,    45,    34,    45,    45,    14,    37,    37,    37,    37,
-      14
+       6,     8,    20,    21,    22,    23,    24,    25,    26,    27,
+      28,    32,    10,     3,     5,    36,     7,    35,    16,    46,
+      47,    48,    45,    30,    30,    20,    21,    22,    23,    24,
+      25,    26,    27,    28,    39,    40,    41,    42,    43,    44,
+      35,    10,    11,    12,    13,    14,    15,    16,    17,    18,
+      19,     4,     5,     0,    29,     5,    45,    30,    29,    45,
+      38,    29,     8,     6,    46,    45,    45,    37,    35,    29,
+      47,    47,    29,    47,    29,    47,     9,    29,    29,     9,
+      29,    47,    47,     9,     9,     9,     9,    46,    46,    -1,
+      38,    47,    46,    38,    38,    80,    38,    38,    38,    38,
+      38,     9,    -1,    31,    16,    -1,    -1,    -1,    27,    46,
+      46,    46,    46,    35,    35,    47,    47,    35,    47,    46,
+      35,    35,    35,    30,    30,    30,    46,    30,    30,    30,
+      46,    30
 };
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
    symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,     3,    47,    48,    44,     0,    30,    49,     4,    50,
-      51,    44,     5,     7,    52,    58,    37,    44,    30,    31,
-      45,    30,    59,    34,    53,     8,    31,    60,     6,    31,
-      54,    10,    11,    14,    61,    44,     9,    36,    45,    12,
-      13,    14,    15,    16,    17,    18,    19,    20,    21,    55,
-      34,    56,    22,    23,    24,    25,    26,    34,    57,    37,
-      37,    37,    37,    45,    45,    14,    14
+       0,     3,    50,    51,    45,     0,    29,     5,    52,    53,
+      55,    56,    45,    30,     4,    54,    55,     7,    56,    64,
+      29,    45,    64,    29,    57,    38,     8,    65,    66,     6,
+      58,    59,    46,    45,    30,    66,    45,    30,    59,    35,
+      39,    40,    41,    42,    43,    44,    37,    47,    47,    47,
+      47,    47,    47,    10,    11,    12,    13,    14,    15,    16,
+      17,    18,    19,    60,    29,    29,    29,    29,    29,    29,
+      20,    21,    22,    23,    24,    25,    26,    27,    28,    35,
+      61,    62,     9,     9,     9,     9,     9,     9,    38,    38,
+      38,    38,    38,    38,    38,    38,    35,    62,    46,    46,
+      46,    46,    46,    46,    46,    46,    47,    48,    47,    47,
+      47,    47,    31,    46,    35,    35,    35,    35,    35,    35,
+      46,    63,    30,    30,    30,    30,    30,    30,    32,    36,
+      46
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -1486,151 +1577,273 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 61 "parser.y"
-    { /* Program complete */ ;}
+#line 94 "parser.y"
+    {
+        generate_html();
+        
+    ;}
     break;
 
   case 3:
-#line 66 "parser.y"
+#line 101 "parser.y"
     {
-        current_form.name = strdup((yyvsp[(2) - (7)].str));
-        current_form.section_count = 0;
-        current_form.meta_count = 0;
-        (yyval.str) = (yyvsp[(2) - (7)].str);
+        current_form.name = strdup((yyvsp[(2) - (5)].str));
+        free((yyvsp[(2) - (5)].str));
     ;}
     break;
 
-  case 6:
-#line 81 "parser.y"
+  case 10:
+#line 120 "parser.y"
     {
-        if (current_form.meta_count < 50) {
-            current_form.meta[current_form.meta_count++] = strdup((yyvsp[(4) - (5)].str));
-        }
-    ;}
-    break;
-
-  case 12:
-#line 104 "parser.y"
-    {
-        current_field.name = strdup((yyvsp[(2) - (6)].str));
-        current_field.type = strdup((yyvsp[(4) - (6)].str));
-        current_field.attr_count = 0;
+        add_metadata((yyvsp[(2) - (5)].str), (yyvsp[(4) - (5)].str));
+        free((yyvsp[(2) - (5)].str));
+        free((yyvsp[(4) - (5)].str));
     ;}
     break;
 
   case 13:
-#line 112 "parser.y"
-    { (yyval.str) = strdup("text"); ;}
-    break;
-
-  case 14:
-#line 113 "parser.y"
-    { (yyval.str) = strdup("textarea"); ;}
-    break;
-
-  case 15:
-#line 114 "parser.y"
-    { (yyval.str) = strdup("number"); ;}
-    break;
-
-  case 16:
-#line 115 "parser.y"
-    { (yyval.str) = strdup("email"); ;}
+#line 133 "parser.y"
+    {
+        add_section((yyvsp[(2) - (3)].str));
+        free((yyvsp[(2) - (3)].str));
+    ;}
     break;
 
   case 17:
-#line 116 "parser.y"
-    { (yyval.str) = strdup("date"); ;}
+#line 145 "parser.y"
+    {
+        add_field((yyvsp[(2) - (6)].str), (yyvsp[(4) - (6)].str));
+        free((yyvsp[(2) - (6)].str));
+        free((yyvsp[(4) - (6)].str));
+    ;}
     break;
 
   case 18:
-#line 117 "parser.y"
-    { (yyval.str) = strdup("checkbox"); ;}
+#line 150 "parser.y"
+    {
+        add_field((yyvsp[(2) - (5)].str), (yyvsp[(4) - (5)].str));
+        free((yyvsp[(2) - (5)].str));
+        free((yyvsp[(4) - (5)].str));
+    ;}
     break;
 
   case 19:
-#line 118 "parser.y"
-    { (yyval.str) = strdup("dropdown"); ;}
+#line 158 "parser.y"
+    { (yyval.str) = strdup("text"); ;}
     break;
 
   case 20:
-#line 119 "parser.y"
-    { (yyval.str) = strdup("radio"); ;}
+#line 159 "parser.y"
+    { (yyval.str) = strdup("textarea"); ;}
     break;
 
   case 21:
-#line 120 "parser.y"
-    { (yyval.str) = strdup("password"); ;}
+#line 160 "parser.y"
+    { (yyval.str) = strdup("number"); ;}
     break;
 
   case 22:
-#line 121 "parser.y"
-    { (yyval.str) = strdup("file"); ;}
+#line 161 "parser.y"
+    { (yyval.str) = strdup("email"); ;}
+    break;
+
+  case 23:
+#line 162 "parser.y"
+    { (yyval.str) = strdup("date"); ;}
+    break;
+
+  case 24:
+#line 163 "parser.y"
+    { (yyval.str) = strdup("checkbox"); ;}
     break;
 
   case 25:
-#line 131 "parser.y"
-    {
-        char buf[512];
-        snprintf(buf, sizeof(buf), "pattern=%s", (yyvsp[(3) - (3)].str));
-        add_attribute(buf);
-        free((yyvsp[(3) - (3)].str));
-    ;}
+#line 164 "parser.y"
+    { (yyval.str) = strdup("select"); ;}
     break;
 
   case 26:
-#line 138 "parser.y"
+#line 165 "parser.y"
+    { (yyval.str) = strdup("radio"); ;}
+    break;
+
+  case 27:
+#line 166 "parser.y"
+    { (yyval.str) = strdup("password"); ;}
+    break;
+
+  case 28:
+#line 167 "parser.y"
+    { (yyval.str) = strdup("file"); ;}
+    break;
+
+  case 31:
+#line 176 "parser.y"
     {
-        char buf[512];
-        snprintf(buf, sizeof(buf), "value=%s", (yyvsp[(3) - (3)].str));
-        add_attribute(buf);
+        add_attribute("required", "required");
+    ;}
+    break;
+
+  case 32:
+#line 179 "parser.y"
+    {
+        add_attribute("pattern", (yyvsp[(3) - (3)].str));
         free((yyvsp[(3) - (3)].str));
     ;}
     break;
 
-  case 27:
-#line 145 "parser.y"
+  case 33:
+#line 183 "parser.y"
     {
-        add_attribute("required");
+        add_attribute("value", (yyvsp[(3) - (3)].str));
+        free((yyvsp[(3) - (3)].str));
     ;}
     break;
 
-  case 28:
-#line 149 "parser.y"
+  case 34:
+#line 187 "parser.y"
     {
-        char buf[512];
-        snprintf(buf, sizeof(buf), "min=%f", (yyvsp[(3) - (3)].num));
-        add_attribute(buf);
-    ;}
-    break;
-
-  case 29:
-#line 155 "parser.y"
-    {
-        char buf[512];
-        snprintf(buf, sizeof(buf), "max=%f", (yyvsp[(3) - (3)].num));
-        add_attribute(buf);
+        char buf[50];
+        sprintf(buf, "%.0f", (yyvsp[(3) - (3)].num));
+        add_attribute("value", buf);
     ;}
     break;
 
   case 35:
-#line 189 "parser.y"
-    { (yyval.num) = 1; ;}
+#line 192 "parser.y"
+    {
+        add_attribute("checked", (yyvsp[(3) - (3)].boolean) ? "checked" : "");
+    ;}
     break;
 
   case 36:
-#line 190 "parser.y"
-    { (yyval.num) = 0; ;}
+#line 195 "parser.y"
+    {
+        char buf[50];
+        sprintf(buf, "%.0f", (yyvsp[(3) - (3)].num));
+        add_attribute("min", buf);
+    ;}
     break;
 
   case 37:
-#line 191 "parser.y"
-    { (yyval.num) = (yyvsp[(1) - (1)].num); ;}
+#line 200 "parser.y"
+    {
+        char buf[50];
+        sprintf(buf, "%.0f", (yyvsp[(3) - (3)].num));
+        add_attribute("max", buf);
+    ;}
+    break;
+
+  case 38:
+#line 205 "parser.y"
+    {
+        char buf[50];
+        sprintf(buf, "%.0f", (yyvsp[(3) - (3)].num));
+        add_attribute("rows", buf);
+    ;}
+    break;
+
+  case 39:
+#line 210 "parser.y"
+    {
+        char buf[50];
+        sprintf(buf, "%.0f", (yyvsp[(3) - (3)].num));
+        add_attribute("cols", buf);
+    ;}
+    break;
+
+  case 40:
+#line 215 "parser.y"
+    {
+        add_attribute("options", (yyvsp[(4) - (5)].str));
+        free((yyvsp[(4) - (5)].str));
+    ;}
+    break;
+
+  case 41:
+#line 219 "parser.y"
+    {
+        add_attribute("accept", (yyvsp[(3) - (3)].str));
+        free((yyvsp[(3) - (3)].str));
+    ;}
+    break;
+
+  case 42:
+#line 226 "parser.y"
+    {
+        (yyval.str) = strdup((yyvsp[(1) - (1)].str));
+        free((yyvsp[(1) - (1)].str));
+    ;}
+    break;
+
+  case 43:
+#line 230 "parser.y"
+    {
+        char *result = malloc(strlen((yyvsp[(1) - (3)].str)) + strlen((yyvsp[(3) - (3)].str)) + 2);
+        sprintf(result, "%s,%s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str));
+        free((yyvsp[(1) - (3)].str));
+        free((yyvsp[(3) - (3)].str));
+        (yyval.str) = result;
+    ;}
+    break;
+
+  case 47:
+#line 249 "parser.y"
+    {
+        add_validation((yyvsp[(2) - (9)].str), "<", (yyvsp[(4) - (9)].num), (yyvsp[(7) - (9)].str));
+        free((yyvsp[(2) - (9)].str));
+        free((yyvsp[(7) - (9)].str));
+    ;}
+    break;
+
+  case 48:
+#line 254 "parser.y"
+    {
+        add_validation((yyvsp[(2) - (9)].str), ">", (yyvsp[(4) - (9)].num), (yyvsp[(7) - (9)].str));
+        free((yyvsp[(2) - (9)].str));
+        free((yyvsp[(7) - (9)].str));
+    ;}
+    break;
+
+  case 49:
+#line 259 "parser.y"
+    {
+        add_validation((yyvsp[(2) - (9)].str), "<=", (yyvsp[(4) - (9)].num), (yyvsp[(7) - (9)].str));
+        free((yyvsp[(2) - (9)].str));
+        free((yyvsp[(7) - (9)].str));
+    ;}
+    break;
+
+  case 50:
+#line 264 "parser.y"
+    {
+        add_validation((yyvsp[(2) - (9)].str), ">=", (yyvsp[(4) - (9)].num), (yyvsp[(7) - (9)].str));
+        free((yyvsp[(2) - (9)].str));
+        free((yyvsp[(7) - (9)].str));
+    ;}
+    break;
+
+  case 51:
+#line 269 "parser.y"
+    {
+        add_validation((yyvsp[(2) - (9)].str), "==", (yyvsp[(4) - (9)].num), (yyvsp[(7) - (9)].str));
+        free((yyvsp[(2) - (9)].str));
+        free((yyvsp[(7) - (9)].str));
+    ;}
+    break;
+
+  case 52:
+#line 274 "parser.y"
+    {
+        add_validation((yyvsp[(2) - (9)].str), "!=", (yyvsp[(4) - (9)].num), (yyvsp[(7) - (9)].str));
+        free((yyvsp[(2) - (9)].str));
+        free((yyvsp[(7) - (9)].str));
+    ;}
     break;
 
 
 /* Line 1267 of yacc.c.  */
-#line 1634 "parser.tab.c"
+#line 1847 "parser.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1844,10 +2057,306 @@ yyreturn:
 }
 
 
-#line 194 "parser.y"
+#line 281 "parser.y"
 
+
+void yyerror(const char *s) {
+    fprintf(stderr, "Parse error at line %d: %s\n", line_num, s);
+}
+
+void add_metadata(char *key, char *value) {
+    if (current_form.meta_count < 10) {
+        current_form.metadata[current_form.meta_count].key = strdup(key);
+        current_form.metadata[current_form.meta_count].value = strdup(strip_quotes(value));
+        current_form.meta_count++;
+    }
+}
+
+void add_section(char *name) {
+    if (current_form.section_count < 20) {
+        current_section.name = strdup(name);
+        current_section.field_count = 0;
+    }
+}
+
+void add_field(char *name, char *type) {
+    if (current_section.field_count < 50) {
+        current_field.name = strdup(name);
+        current_field.type = strdup(type);
+        current_field.attr_count = 0;
+        
+        // Add the field to current section
+        current_section.fields[current_section.field_count] = current_field;
+        current_section.field_count++;
+        
+        // Add section to form if this is the first field
+        if (current_section.field_count == 1 || 
+            current_form.section_count == 0 || 
+            strcmp(current_form.sections[current_form.section_count-1].name, current_section.name) != 0) {
+            current_form.sections[current_form.section_count] = current_section;
+            current_form.section_count++;
+        } else {
+            // Update existing section
+            current_form.sections[current_form.section_count-1] = current_section;
+        }
+    }
+}
+
+void add_attribute(char *name, char *value) {
+    if (current_field.attr_count < 20) {
+        current_field.attributes[current_field.attr_count].name = strdup(name);
+        current_field.attributes[current_field.attr_count].value = strdup(value);
+        current_field.attr_count++;
+    }
+}
+
+void add_validation(char *field, char *op, double val, char *error) {
+    if (current_form.validation_count < 10) {
+        current_validation.field_name = strdup(field);
+        current_validation.operator = strdup(op);
+        current_validation.value = val;
+        current_validation.error_msg = strdup(strip_quotes(error));
+        current_form.validations[current_form.validation_count] = current_validation;
+        current_form.validation_count++;
+    }
+}
+
+char* strip_quotes(char *str) {
+    if (str[0] == '"' && str[strlen(str)-1] == '"') {
+        str[strlen(str)-1] = '\0';
+        return str + 1;
+    }
+    return str;
+}
+
+void generate_html() {
+    output_file = fopen("output.html", "w");
+    if (!output_file) {
+        fprintf(stderr, "Error: Cannot create output.html\n");
+        return;
+    }
+    
+    // HTML header
+    fprintf(output_file, "<!DOCTYPE html>\n");
+    fprintf(output_file, "<html lang=\"en\">\n");
+    fprintf(output_file, "<head>\n");
+    fprintf(output_file, "    <meta charset=\"UTF-8\">\n");
+    fprintf(output_file, "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n");
+    fprintf(output_file, "    <title>%s</title>\n", current_form.name);
+    fprintf(output_file, "    <style>\n");
+    fprintf(output_file, "        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }\n");
+    fprintf(output_file, "        .section { margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }\n");
+    fprintf(output_file, "        .section h2 { margin-top: 0; color: #333; }\n");
+    fprintf(output_file, "        .field { margin-bottom: 15px; }\n");
+    fprintf(output_file, "        label { display: block; margin-bottom: 5px; font-weight: bold; }\n");
+    fprintf(output_file, "        input, textarea, select { width: 100%%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }\n");
+    fprintf(output_file, "        input[type=\"checkbox\"], input[type=\"radio\"] { width: auto; margin-right: 5px; }\n");
+    fprintf(output_file, "        .radio-group { margin-top: 5px; }\n");
+    fprintf(output_file, "        .radio-option { margin-bottom: 5px; }\n");
+    fprintf(output_file, "        .error { color: red; font-size: 0.9em; margin-top: 5px; }\n");
+    fprintf(output_file, "    </style>\n");
+    fprintf(output_file, "</head>\n");
+    fprintf(output_file, "<body>\n");
+    
+    // Form metadata as comments
+    for (int i = 0; i < current_form.meta_count; i++) {
+        fprintf(output_file, "<!-- %s: %s -->\n", 
+                current_form.metadata[i].key, current_form.metadata[i].value);
+    }
+    
+    fprintf(output_file, "    <h1>%s</h1>\n", current_form.name);
+    fprintf(output_file, "    <form name=\"%s\" id=\"%s\">\n", current_form.name, current_form.name);
+    
+// Generate sections and fields
+for (int i = 0; i < current_form.section_count; i++) {
+    Section sec = current_form.sections[i];
+    fprintf(output_file, "        <div class=\"section\">\n");
+    fprintf(output_file, "            <h2>%s</h2>\n", sec.name);
+
+    for (int j = 0; j < sec.field_count; j++) {
+        Field field = sec.fields[j];
+        fprintf(output_file, "            <div class=\"field\">\n");
+
+        if (strcmp(field.type, "radio") == 0) {
+            // Handle radio buttons
+            fprintf(output_file, "                <label>%s:</label>\n", field.name);
+            fprintf(output_file, "                <div class=\"radio-group\">\n");
+            // Find options attribute
+            char *options = NULL;
+            for (int k = 0; k < field.attr_count; k++) {
+                if (strcmp(field.attributes[k].name, "options") == 0) {
+                    options = field.attributes[k].value;
+                    break;
+                }
+            }
+            if (options) {
+                char *opt_copy = strdup(options);
+                char *token = strtok(opt_copy, ",");
+                while (token) {
+                    char *clean_token = strip_quotes(token);
+                    fprintf(output_file, "                    <div class=\"radio-option\">\n");
+                    fprintf(output_file, "                        <input type=\"radio\" name=\"%s\" value=\"%s\" id=\"%s_%s\">\n", 
+                            field.name, clean_token, field.name, clean_token);
+                    fprintf(output_file, "                        <label for=\"%s_%s\">%s</label>\n", 
+                            field.name, clean_token, clean_token);
+                    fprintf(output_file, "                    </div>\n");
+                    token = strtok(NULL, ",");
+                }
+                free(opt_copy);
+            }
+            fprintf(output_file, "                </div>\n");
+
+        } else if (strcmp(field.type, "checkbox") == 0) {
+            // Handle checkbox
+            fprintf(output_file, "                <label>\n");
+            fprintf(output_file, "                    <input type=\"checkbox\" name=\"%s\"", field.name);
+            // Add attributes
+            for (int k = 0; k < field.attr_count; k++) {
+                if (strcmp(field.attributes[k].name, "checked") == 0 && 
+                    strlen(field.attributes[k].value) > 0) {
+                    fprintf(output_file, " checked");
+                }
+            }
+            fprintf(output_file, ">\n");
+            fprintf(output_file, "                    %s\n", field.name);
+            fprintf(output_file, "                </label>\n");
+
+        } else if (strcmp(field.type, "textarea") == 0) {
+            // Handle textarea
+            fprintf(output_file, "                <label for=\"%s\">%s:</label>\n", field.name, field.name);
+            fprintf(output_file, "                <textarea name=\"%s\" id=\"%s\"", field.name, field.name);
+            // Add attributes
+            for (int k = 0; k < field.attr_count; k++) {
+                if (strcmp(field.attributes[k].name, "value") != 0) {
+                    fprintf(output_file, " %s=\"%s\"", 
+                            field.attributes[k].name, field.attributes[k].value);
+                }
+            }
+            fprintf(output_file, ">");
+            // Add default value inside textarea
+            for (int k = 0; k < field.attr_count; k++) {
+                if (strcmp(field.attributes[k].name, "value") == 0) {
+                    fprintf(output_file, "%s", field.attributes[k].value);
+                    break;
+                }
+            }
+            fprintf(output_file, "</textarea>\n");
+
+        } else if (strcmp(field.type, "select") == 0) {
+            // Handle dropdown/select
+            fprintf(output_file, "                <label for=\"%s\">%s:</label>\n", field.name, field.name);
+            fprintf(output_file, "                <select name=\"%s\" id=\"%s\"", field.name, field.name);
+            // Add other attributes except "options"
+            for (int k = 0; k < field.attr_count; k++) {
+                if (strcmp(field.attributes[k].name, "options") != 0) {
+                    fprintf(output_file, " %s=\"%s\"", 
+                            field.attributes[k].name, field.attributes[k].value);
+                }
+            }
+            fprintf(output_file, ">\n");
+            // Add options
+            char *options = NULL;
+            for (int k = 0; k < field.attr_count; k++) {
+            if (strcmp(field.attributes[k].name, "options") == 0) {
+             options = field.attributes[k].value;
+              break;
+            }
+}
+            if (options) {
+    char *opt_copy = strdup(options);
+    char *start = opt_copy;
+    while (*start) {
+        // Skip whitespace and commas
+        while (*start == ' ' || *start == ',') start++;
+        if (*start == '\0') break;
+        // Find start of quoted string
+        if (*start == '"') start++;
+        char *end = start;
+        while (*end && *end != '"') end++;
+        char tmp = *end;
+        *end = '\0';
+        fprintf(output_file, "    <option value=\"%s\">%s</option>\n", start, start);
+        *end = tmp;
+        start = end;
+        if (*start == '"') start++;
+        while (*start == ',' || *start == ' ') start++;
+    }
+    free(opt_copy);
+}
+            fprintf(output_file, "                </select>\n");
+
+        } else {
+            // Handle regular input fields
+            fprintf(output_file, "                <label for=\"%s\">%s:</label>\n", field.name, field.name);
+            fprintf(output_file, "                <input type=\"%s\" name=\"%s\" id=\"%s\"", 
+                    field.type, field.name, field.name);
+            // Add attributes
+            for (int k = 0; k < field.attr_count; k++) {
+                if (strcmp(field.attributes[k].name, "options") != 0) {
+                    fprintf(output_file, " %s=\"%s\"", 
+                            field.attributes[k].name, field.attributes[k].value);
+                }
+            }
+            fprintf(output_file, ">\n");
+        }
+
+        fprintf(output_file, "            </div>\n");
+    }
+
+    fprintf(output_file, "        </div>\n");
+}
+
+fprintf(output_file, "        <button type=\"submit\">Submit</button>\n");
+fprintf(output_file, "    </form>\n");
+    
+    // Add JavaScript validation if needed
+    if (current_form.validation_count > 0) {
+        fprintf(output_file, "    <script>\n");
+        fprintf(output_file, "        document.getElementById('%s').addEventListener('submit', function(e) {\n", current_form.name);
+        fprintf(output_file, "            let isValid = true;\n");
+        fprintf(output_file, "            let errors = [];\n");
+        
+        for (int i = 0; i < current_form.validation_count; i++) {
+            ValidationRule rule = current_form.validations[i];
+            fprintf(output_file, "            let %s = parseFloat(document.getElementById('%s').value);\n", 
+                    rule.field_name, rule.field_name);
+            fprintf(output_file, "            if (%s %s %.0f) {\n", 
+                    rule.field_name, rule.operator, rule.value);
+            fprintf(output_file, "                errors.push('%s');\n", rule.error_msg);
+            fprintf(output_file, "                isValid = false;\n");
+            fprintf(output_file, "            }\n");
+        }
+        
+        fprintf(output_file, "            if (!isValid) {\n");
+        fprintf(output_file, "                e.preventDefault();\n");
+        fprintf(output_file, "                alert('Validation errors:\\n' + errors.join('\\n'));\n");
+        fprintf(output_file, "            }\n");
+        fprintf(output_file, "        });\n");
+        fprintf(output_file, "    </script>\n");
+    }
+    
+    fprintf(output_file, "</body>\n");
+    fprintf(output_file, "</html>\n");
+    
+    fclose(output_file);
+}
 
 int main() {
-    yyparse();
+    // Initialize form structure
+    current_form.name = NULL;
+    current_form.meta_count = 0;
+    current_form.section_count = 0;
+    current_form.validation_count = 0;
+    
+    
+    int result = yyparse();
+    
+    if (result == 0) {
+        printf("Parsing completed successfully.\n");
+    } else {
+        printf("Parsing failed with errors.\n");
+        return 1;
+    }
+    
     return 0;
 }
