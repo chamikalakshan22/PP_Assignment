@@ -387,147 +387,127 @@ void generate_html() {
     fprintf(output_file, "    <h1>%s</h1>\n", current_form.name);
     fprintf(output_file, "    <form name=\"%s\" id=\"%s\">\n", current_form.name, current_form.name);
     
-// Generate sections and fields
-for (int i = 0; i < current_form.section_count; i++) {
-    Section sec = current_form.sections[i];
-    fprintf(output_file, "        <div class=\"section\">\n");
-    fprintf(output_file, "            <h2>%s</h2>\n", sec.name);
+    // Generate sections and fields
+    for (int i = 0; i < current_form.section_count; i++) {
+        Section sec = current_form.sections[i];
+        fprintf(output_file, "        <div class=\"section\">\n");
+        fprintf(output_file, "            <h2>%s</h2>\n", sec.name);
 
-    for (int j = 0; j < sec.field_count; j++) {
-        Field field = sec.fields[j];
-        fprintf(output_file, "            <div class=\"field\">\n");
+        for (int j = 0; j < sec.field_count; j++) {
+            Field field = sec.fields[j];
+            fprintf(output_file, "            <div class=\"field\">\n");
 
-        if (strcmp(field.type, "radio") == 0) {
-            // Handle radio buttons
-            fprintf(output_file, "                <label>%s:</label>\n", field.name);
-            fprintf(output_file, "                <div class=\"radio-group\">\n");
-            // Find options attribute
-            char *options = NULL;
-            for (int k = 0; k < field.attr_count; k++) {
-                if (strcmp(field.attributes[k].name, "options") == 0) {
-                    options = field.attributes[k].value;
-                    break;
+            if (strcmp(field.type, "radio") == 0) {
+                // Handle radio buttons
+                fprintf(output_file, "                <label>%s:</label>\n", field.name);
+                fprintf(output_file, "                <div class=\"radio-group\">\n");
+                // Find options attribute
+                char *options = NULL;
+                for (int k = 0; k < field.attr_count; k++) {
+                    if (strcmp(field.attributes[k].name, "options") == 0) {
+                        options = field.attributes[k].value;
+                        break;
+                    }
                 }
-            }
-            if (options) {
-                char *opt_copy = strdup(options);
-                char *token = strtok(opt_copy, ",");
-                while (token) {
-                    char *clean_token = strip_quotes(token);
-                    fprintf(output_file, "                    <div class=\"radio-option\">\n");
-                    fprintf(output_file, "                        <input type=\"radio\" name=\"%s\" value=\"%s\" id=\"%s_%s\">\n", 
-                            field.name, clean_token, field.name, clean_token);
-                    fprintf(output_file, "                        <label for=\"%s_%s\">%s</label>\n", 
-                            field.name, clean_token, clean_token);
-                    fprintf(output_file, "                    </div>\n");
-                    token = strtok(NULL, ",");
+                if (options) {
+                    char *opt_copy = strdup(options);
+                    char *token = strtok(opt_copy, ",");
+                    while (token) {
+                        char *clean_token = strip_quotes(token);
+                        fprintf(output_file, "                    <div class=\"radio-option\">\n");
+                        fprintf(output_file, "                        <input type=\"radio\" name=\"%s\" value=\"%s\" id=\"%s_%s\">\n", 
+                                field.name, clean_token, field.name, clean_token);
+                        fprintf(output_file, "                        <label for=\"%s_%s\">%s</label>\n", 
+                                field.name, clean_token, clean_token);
+                        fprintf(output_file, "                    </div>\n");
+                        token = strtok(NULL, ",");
+                    }
+                    free(opt_copy);
                 }
-                free(opt_copy);
-            }
-            fprintf(output_file, "                </div>\n");
+                fprintf(output_file, "                </div>\n");
 
-        } else if (strcmp(field.type, "checkbox") == 0) {
-            // Handle checkbox
-            fprintf(output_file, "                <label>\n");
-            fprintf(output_file, "                    <input type=\"checkbox\" name=\"%s\"", field.name);
-            // Add attributes
-            for (int k = 0; k < field.attr_count; k++) {
-                if (strcmp(field.attributes[k].name, "checked") == 0 && 
-                    strlen(field.attributes[k].value) > 0) {
-                    fprintf(output_file, " checked");
+            } else if (strcmp(field.type, "checkbox") == 0) {
+                // Handle checkbox
+                fprintf(output_file, "                <label>\n");
+                fprintf(output_file, "                    <input type=\"checkbox\" name=\"%s\"", field.name);
+                // Add attributes
+                for (int k = 0; k < field.attr_count; k++) {
+                    if (strcmp(field.attributes[k].name, "checked") == 0 && 
+                        strlen(field.attributes[k].value) > 0) {
+                        fprintf(output_file, " checked");
+                    }
                 }
-            }
-            fprintf(output_file, ">\n");
-            fprintf(output_file, "                    %s\n", field.name);
-            fprintf(output_file, "                </label>\n");
+                fprintf(output_file, ">\n");
+                fprintf(output_file, "                    %s\n", field.name);
+                fprintf(output_file, "                </label>\n");
 
-        } else if (strcmp(field.type, "textarea") == 0) {
-            // Handle textarea
-            fprintf(output_file, "                <label for=\"%s\">%s:</label>\n", field.name, field.name);
-            fprintf(output_file, "                <textarea name=\"%s\" id=\"%s\"", field.name, field.name);
-            // Add attributes
-            for (int k = 0; k < field.attr_count; k++) {
-                if (strcmp(field.attributes[k].name, "value") != 0) {
-                    fprintf(output_file, " %s=\"%s\"", 
-                            field.attributes[k].name, field.attributes[k].value);
+            } else if (strcmp(field.type, "textarea") == 0) {
+                // Handle textarea
+                fprintf(output_file, "                <label for=\"%s\">%s:</label>\n", field.name, field.name);
+                fprintf(output_file, "                <textarea name=\"%s\" id=\"%s\"", field.name, field.name);
+                // Add attributes
+                for (int k = 0; k < field.attr_count; k++) {
+                    if (strcmp(field.attributes[k].name, "value") != 0) {
+                        fprintf(output_file, " %s=\"%s\"", 
+                                field.attributes[k].name, field.attributes[k].value);
+                    }
                 }
-            }
-            fprintf(output_file, ">");
-            // Add default value inside textarea
-            for (int k = 0; k < field.attr_count; k++) {
-                if (strcmp(field.attributes[k].name, "value") == 0) {
-                    fprintf(output_file, "%s", field.attributes[k].value);
-                    break;
+                fprintf(output_file, ">");
+                // Add default value inside textarea
+                for (int k = 0; k < field.attr_count; k++) {
+                    if (strcmp(field.attributes[k].name, "value") == 0) {
+                        fprintf(output_file, "%s", field.attributes[k].value);
+                        break;
+                    }
                 }
-            }
-            fprintf(output_file, "</textarea>\n");
+                fprintf(output_file, "</textarea>\n");
 
-        } else if (strcmp(field.type, "select") == 0) {
-            // Handle dropdown/select
-            fprintf(output_file, "                <label for=\"%s\">%s:</label>\n", field.name, field.name);
-            fprintf(output_file, "                <select name=\"%s\" id=\"%s\"", field.name, field.name);
-            // Add other attributes except "options"
-            for (int k = 0; k < field.attr_count; k++) {
-                if (strcmp(field.attributes[k].name, "options") != 0) {
-                    fprintf(output_file, " %s=\"%s\"", 
-                            field.attributes[k].name, field.attributes[k].value);
+            } else if (strcmp(field.type, "select") == 0) {
+                // Handle dropdown/select
+                fprintf(output_file, "                <label for=\"%s\">%s:</label>\n", field.name, field.name);
+                fprintf(output_file, "                <select name=\"%s\" id=\"%s\">\n", field.name, field.name);
+                char *options = NULL;
+                for (int k = 0; k < field.attr_count; k++) {
+                    if (strcmp(field.attributes[k].name, "options") == 0) {
+                        options = field.attributes[k].value;
+                        break;
+                    }
                 }
-            }
-            fprintf(output_file, ">\n");
-            // Add options
-            char *options = NULL;
-            for (int k = 0; k < field.attr_count; k++) {
-            if (strcmp(field.attributes[k].name, "options") == 0) {
-             options = field.attributes[k].value;
-              break;
-            }
-}
-            if (options) {
-    char *opt_copy = strdup(options);
-    char *start = opt_copy;
-    while (*start) {
-        // Skip whitespace and commas
-        while (*start == ' ' || *start == ',') start++;
-        if (*start == '\0') break;
-        // Find start of quoted string
-        if (*start == '"') start++;
-        char *end = start;
-        while (*end && *end != '"') end++;
-        char tmp = *end;
-        *end = '\0';
-        fprintf(output_file, "    <option value=\"%s\">%s</option>\n", start, start);
-        *end = tmp;
-        start = end;
-        if (*start == '"') start++;
-        while (*start == ',' || *start == ' ') start++;
-    }
-    free(opt_copy);
-}
-            fprintf(output_file, "                </select>\n");
+                if (options) {
+                    char *opt_copy = strdup(options);
+                    char *token = strtok(opt_copy, ",");
+                    while (token) {
+                        char *clean_token = strip_quotes(token); // remove quotes and whitespace
+                        fprintf(output_file, "                    <option value=\"%s\">%s</option>\n", clean_token, clean_token);
+                        token = strtok(NULL, ",");
+                    }
+                    free(opt_copy);
+                }
+                fprintf(output_file, "                </select>\n");
 
-        } else {
-            // Handle regular input fields
-            fprintf(output_file, "                <label for=\"%s\">%s:</label>\n", field.name, field.name);
-            fprintf(output_file, "                <input type=\"%s\" name=\"%s\" id=\"%s\"", 
-                    field.type, field.name, field.name);
-            // Add attributes
-            for (int k = 0; k < field.attr_count; k++) {
-                if (strcmp(field.attributes[k].name, "options") != 0) {
-                    fprintf(output_file, " %s=\"%s\"", 
-                            field.attributes[k].name, field.attributes[k].value);
+            } else {
+                // Handle regular input fields
+                fprintf(output_file, "                <label for=\"%s\">%s:</label>\n", field.name, field.name);
+                fprintf(output_file, "                <input type=\"%s\" name=\"%s\" id=\"%s\"", 
+                        field.type, field.name, field.name);
+                // Add attributes
+                for (int k = 0; k < field.attr_count; k++) {
+                    if (strcmp(field.attributes[k].name, "options") != 0) {
+                        fprintf(output_file, " %s=\"%s\"", 
+                                field.attributes[k].name, field.attributes[k].value);
+                    }
                 }
+                fprintf(output_file, ">\n");
             }
-            fprintf(output_file, ">\n");
+
+            fprintf(output_file, "            </div>\n");
         }
 
-        fprintf(output_file, "            </div>\n");
+        fprintf(output_file, "        </div>\n");
     }
 
-    fprintf(output_file, "        </div>\n");
-}
-
-fprintf(output_file, "        <button type=\"submit\">Submit</button>\n");
-fprintf(output_file, "    </form>\n");
+    fprintf(output_file, "        <button type=\"submit\">Submit</button>\n");
+    fprintf(output_file, "    </form>\n");
     
     // Add JavaScript validation if needed
     if (current_form.validation_count > 0) {
