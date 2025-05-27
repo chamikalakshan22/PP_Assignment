@@ -1,0 +1,119 @@
+Terminals
+
+Keywords
+
+FORM        ::= 'form'
+META        ::= 'meta'
+SECTION     ::= 'section'
+FIELD       ::= 'field'
+VALIDATE    ::= 'validate'
+IF          ::= 'if'
+ERROR       ::= 'error'
+
+Field Types
+
+TEXT        ::= 'text'
+TEXTAREA    ::= 'textarea'
+NUMBER      ::= 'number'
+EMAIL       ::= 'email'
+DATE        ::= 'date'
+CHECKBOX    ::= 'checkbox'
+DROPDOWN    ::= 'dropdown'
+RADIO       ::= 'radio'
+PASSWORD    ::= 'password'
+FILE        ::= 'file'
+
+Attributes
+
+REQUIRED    ::= 'required'
+PATTERN     ::= 'pattern'
+DEFAULT     ::= 'default'
+MIN         ::= 'min'
+MAX         ::= 'max'
+ROWS        ::= 'rows'
+COLS        ::= 'cols'
+OPTIONS     ::= 'options'
+ACCEPT      ::= 'accept'
+
+Operators and Delimiters
+
+LBRACE      ::= '{'
+RBRACE      ::= '}'
+LBRACKET    ::= '['
+RBRACKET    ::= ']'
+LPAREN      ::= '('
+RPAREN      ::= ')'
+SEMICOLON   ::= ';'
+COMMA       ::= ','
+COLON       ::= ':'
+EQUALS      ::= '='
+LT          ::= '<'
+GT          ::= '>'
+LE          ::= '<='
+GE          ::= '>='
+EQ          ::= '=='
+NE          ::= '!='
+
+Literals
+
+IDENTIFIER  ::= [a-zA-Z][a-zA-Z0-9_]*
+STRING      ::= '"' [^"]* '"'
+NUMBER      ::= [0-9]+ ('.' [0-9]+)?
+BOOLEAN     ::= 'true' | 'false'
+
+Non-Terminals
+
+Program Structure
+
+program         ::= form
+
+form            ::= FORM IDENTIFIER LBRACE form_body RBRACE
+
+form_body       ::= meta_list section_list validate_block?
+
+meta_list       ::= meta_stmt*
+
+meta_stmt       ::= META IDENTIFIER EQUALS STRING SEMICOLON
+
+section_list    ::= section_stmt+
+
+section_stmt    ::= SECTION IDENTIFIER LBRACE field_list RBRACE
+
+field_list      ::= field_stmt+
+
+field_stmt      ::= FIELD IDENTIFIER COLON field_type attribute_list? SEMICOLON
+
+Field Types and Attributes
+
+field_type      ::= TEXT | TEXTAREA | NUMBER | EMAIL | DATE | 
+                    CHECKBOX | DROPDOWN | RADIO | PASSWORD | FILE
+
+attribute_list  ::= attribute+
+
+attribute       ::= REQUIRED
+                  | PATTERN EQUALS STRING
+                  | DEFAULT EQUALS (STRING | NUMBER | BOOLEAN)
+                  | MIN EQUALS NUMBER
+                  | MAX EQUALS NUMBER
+                  | ROWS EQUALS NUMBER
+                  | COLS EQUALS NUMBER
+                  | OPTIONS EQUALS LBRACKET string_list RBRACKET
+                  | ACCEPT EQUALS STRING
+
+string_list     ::= STRING (COMMA STRING)*
+
+Validation Rules
+
+validate_block  ::= VALIDATE LBRACE validation_rules RBRACE
+
+validation_rules ::= validation_rule+
+
+validation_rule ::= IF condition LBRACE error_stmt RBRACE
+
+condition       ::= expression comparison_op expression
+
+expression      ::= IDENTIFIER | NUMBER
+
+comparison_op   ::= LT | GT | LE | GE | EQ | NE
+
+error_stmt      ::= ERROR STRING SEMICOLON
